@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Tah & Joh Compras 🛒</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: #0F1117; color: #E8E8E8; min-height: 100vh; padding-bottom: 90px; }
+
+    /* HEADER */
+    header { background: #161B22; padding: 20px 16px 0; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 20px #00000066; }
+    .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    h1 { font-size: 26px; font-weight: 900; color: #fff; }
+    .subtitle { font-size: 12px; color: #666; margin-top: 2px; }
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .badge.online { background: #51CF6622; color: #51CF66; }
+    .badge.syncing { background: #FFD43B22; color: #FFD43B; }
+    .stats-row { display: flex; gap: 24px; margin-bottom: 16px; }
+    .stat { display: flex; flex-direction: column; align-items: center; }
+    .stat-num { font-size: 24px; font-weight: 900; color: #fff; line-height: 1; }
+    .stat-num.red { color: #FF6B6B; }
+    .stat-num.green { color: #51CF66; }
+    .stat-label { font-size: 11px; color: #666; margin-top: 2px; }
+    nav { display: flex; gap: 4px; }
+    .nav-btn { flex: 1; padding: 10px 4px; background: transparent; border: none; border-bottom: 3px solid transparent; color: #666; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+    .nav-btn.active { color: #51CF66; border-bottom-color: #51CF66; }
+
+    /* MAIN */
+    main { padding: 16px; }
+    .tool-row { margin-bottom: 12px; }
+    .search-input { width: 100%; padding: 10px 14px; background: #1E2330; border: 1px solid #2A3040; border-radius: 12px; color: #E8E8E8; font-size: 14px; outline: none; margin-bottom: 8px; font-family: inherit; }
+    .filter-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .filter-btn { padding: 6px 12px; background: #1E2330; border: 1px solid #2A3040; border-radius: 20px; color: #888; font-size: 12px; cursor: pointer; font-family: inherit; }
+    .filter-btn.active { background: #51CF6622; border-color: #51CF66; color: #51CF66; }
+    .clear-btn { padding: 6px 12px; background: #FF6B6B22; border: 1px solid #FF6B6B44; border-radius: 20px; color: #FF6B6B; font-size: 12px; cursor: pointer; margin-left: auto; font-family: inherit; }
+    .back-btn { padding: 8px 16px; background: #1E2330; border: 1px solid #2A3040; border-radius: 20px; color: #888; font-size: 13px; cursor: pointer; margin-bottom: 12px; font-family: inherit; }
+    .section-hint { font-size: 12px; color: #555; margin-bottom: 12px; }
+
+    /* SECTIONS */
+    .cat-section { margin-bottom: 20px; }
+    .cat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #1E2330; }
+    .cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .cat-name-label { font-size: 13px; font-weight: 700; color: #AAA; flex: 1; }
+    .cat-count { font-size: 12px; color: #555; }
+
+    /* ITEM CARD */
+    .card { display: flex; align-items: center; background: #161B22; border-radius: 12px; padding: 12px 10px; margin-bottom: 8px; gap: 10px; border-left: 4px solid #333; transition: opacity 0.2s; }
+    .card.done { opacity: 0.45; }
+    .check-circle { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #333; background: transparent; color: #51CF66; font-size: 14px; font-weight: 900; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .check-circle.checked { background: #51CF6633; border-color: #51CF66; }
+    .card-body { flex: 1; min-width: 0; cursor: pointer; }
+    .card-top { display: flex; justify-content: space-between; align-items: center; }
+    .card-name { font-size: 15px; font-weight: 700; color: #E8E8E8; }
+    .card-name.done-text { text-decoration: line-through; color: #555; }
+    .card-qty { font-size: 13px; color: #666; flex-shrink: 0; margin-left: 8px; }
+    .card-notes { font-size: 12px; color: #555; margin: 2px 0 4px; }
+    .card-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .card-cat-label { font-size: 11px; color: #555; }
+    .stock-tag { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; border: 1px solid; cursor: pointer; background: transparent; font-family: inherit; }
+    .urgent-badge { font-size: 11px; background: #FF6B6B22; color: #FF6B6B; padding: 2px 6px; border-radius: 8px; border: 1px solid #FF6B6B44; }
+    .delete-btn { padding: 4px 8px; background: transparent; border: none; color: #333; font-size: 14px; cursor: pointer; font-family: inherit; flex-shrink: 0; }
+    .delete-btn:hover { color: #FF6B6B; }
+
+    /* EMPTY STATE */
+    .empty { text-align: center; padding: 60px 20px; }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-text { font-size: 18px; font-weight: 700; color: #555; }
+    .empty-hint { font-size: 13px; color: #444; margin-top: 6px; }
+
+    /* CAT GRID */
+    .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .cat-card { background: #161B22; border: 2px solid #2A3040; border-radius: 16px; padding: 20px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; position: relative; transition: transform 0.1s; }
+    .cat-card:active { transform: scale(0.97); }
+    .cat-card-emoji { font-size: 32px; }
+    .cat-card-name { font-size: 13px; font-weight: 700; color: #AAA; text-align: center; }
+    .cat-card-badge { position: absolute; top: 8px; right: 8px; min-width: 22px; height: 22px; border-radius: 11px; color: #fff; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+
+    /* FAB */
+    .fab { position: fixed; bottom: 28px; right: 20px; width: 58px; height: 58px; border-radius: 50%; background: #51CF66; color: #fff; font-size: 30px; border: none; cursor: pointer; box-shadow: 0 4px 24px #51CF6677; font-weight: 300; z-index: 200; line-height: 1; font-family: inherit; }
+
+    /* MODAL */
+    .overlay { position: fixed; inset: 0; background: #000000BB; z-index: 300; display: flex; align-items: flex-end; }
+    .modal { background: #161B22; width: 100%; max-height: 92vh; border-radius: 20px 20px 0 0; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 0; }
+    .modal-title { font-size: 18px; font-weight: 800; color: #fff; }
+    .close-btn { background: transparent; border: none; color: #666; font-size: 22px; cursor: pointer; padding: 4px; font-family: inherit; }
+    .form-body { padding: 16px 20px 40px; }
+    label.form-label { display: block; font-size: 12px; font-weight: 700; color: #666; margin-bottom: 6px; margin-top: 14px; text-transform: uppercase; letter-spacing: 1px; }
+    .form-input { width: 100%; padding: 10px 14px; background: #0F1117; border: 1px solid #2A3040; border-radius: 10px; color: #E8E8E8; font-size: 14px; outline: none; font-family: inherit; }
+    .form-input:focus { border-color: #51CF6688; }
+    .row-2 { display: flex; gap: 12px; }
+    .row-2 > div { flex: 1; }
+    .cat-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cat-pick-btn { padding: 6px 12px; background: #0F1117; border: 1px solid #2A3040; border-radius: 20px; color: #888; font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .cat-pick-btn.selected { color: #E8E8E8; }
+    .stock-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+    .stock-btn { padding: 6px 14px; background: transparent; border: 2px solid; border-radius: 20px; color: #E8E8E8; font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .check-row { margin: 16px 0; }
+    .check-label { display: flex; align-items: center; font-size: 15px; font-weight: 700; color: #E8E8E8; cursor: pointer; gap: 8px; }
+    .save-btn { width: 100%; padding: 14px; background: #51CF66; border: none; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 12px; font-family: inherit; }
+    .save-btn:active { background: #40C057; }
+
+    /* FOOTER */
+    .sync-footer { position: fixed; bottom: 0; left: 0; right: 0; text-align: center; padding: 4px; font-size: 10px; color: #333; background: #0F1117; }
+
+    /* LOADING */
+    .loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 16px; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top: 4px solid #51CF66; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: #888; font-size: 14px; }
+
+    /* TOAST */
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1E2330; border: 1px solid #2A3040; color: #E8E8E8; padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 700; z-index: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div id="loading" class="loading-wrap">
+  <div class="spinner"></div>
+  <p class="loading-text">Conectando ao Firebase...</p>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <div class="header-top">
+      <div>
+        <h1>🛒 Tah & Joh</h1>
+        <p class="subtitle">Compras da casa</p>
+      </div>
+      <span id="sync-badge" class="badge online">● Online</span>
+    </div>
+    <div class="stats-row">
+      <div class="stat">
+        <span id="stat-pending" class="stat-num">0</span>
+        <span class="stat-label">Pendentes</span>
+      </div>
+      <div class="stat">
+        <span id="stat-urgent" class="stat-num red">0</span>
+        <span class="stat-label">Urgentes</span>
+      </div>
+      <div class="stat">
+        <span id="stat-done" class="stat-num green">0</span>
+        <span class="stat-label">Feitos</span>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-btn active" onclick="setView('lista')">📋 Lista</button>
+      <button class="nav-btn" onclick="setView('estoque')">📦 Estoque</button>
+      <button class="nav-btn" onclick="setView('categorias')">🗂 Categorias</button>
+    </nav>
+  </header>
+
+  <main id="main-content"></main>
+
+  <button class="fab" onclick="openAdd()">+</button>
+
+  <div id="toast" class="toast"></div>
+  <p class="sync-footer" id="sync-footer"></p>
+</div>
+
+<!-- MODAL -->
+<div id="overlay" class="overlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title">Novo item</h2>
+      <button class="close-btn" onclick="closeForm()">✕</button>
+    </div>
+    <div class="form-body">
+      <label class="form-label">Nome do item *</label>
+      <input class="form-input" id="f-name" placeholder="Ex: Arroz, Shampoo..." />
+
+      <label class="form-label">Categoria</label>
+      <div class="cat-picker" id="cat-picker"></div>
+
+      <div class="row-2">
+        <div>
+          <label class="form-label">Quantidade</label>
+          <input class="form-input" id="f-qty" type="number" min="1" value="1" />
+        </div>
+        <div>
+          <label class="form-label">Unidade</label>
+          <select class="form-input" id="f-unit">
+            <option>un</option><option>kg</option><option>g</option><option>L</option>
+            <option>ml</option><option>cx</option><option>pct</option><option>par</option>
+            <option>rolo</option><option>frasco</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="form-label">Estoque em casa</label>
+      <div class="stock-picker" id="stock-picker"></div>
+
+      <label class="form-label">Observações</label>
+      <textarea class="form-input" id="f-notes" placeholder="Marca preferida, tamanho..." style="min-height:60px;resize:vertical"></textarea>
+
+      <div class="check-row">
+        <label class="check-label">
+          <input type="checkbox" id="f-urgent" />
+          🚨 Urgente
+        </label>
+      </div>
+
+      <button class="save-btn" onclick="saveForm()">✅ Adicionar à lista</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDKTL2BOkzbfoscHITDNkh0CcTEOUGjHSM",
+    authDomain: "tah-joh-compras.firebaseapp.com",
+    databaseURL: "https://tah-joh-compras-default-rtdb.firebaseio.com",
+    projectId: "tah-joh-compras",
+    storageBucket: "tah-joh-compras.firebasestorage.app",
+    messagingSenderId: "770778039993",
+    appId: "1:770778039993:web:41a9553515f9392d313d68"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const itemsRef = ref(db, 'items');
+
+  const CATEGORIES = [
+    { id: "especificos", name: "Específicos", emoji: "🛒", color: "#FF6B6B" },
+    { id: "hortifruti", name: "Hortifruti e Frios", emoji: "🥦", color: "#51CF66" },
+    { id: "higiene", name: "Higiene Pessoal", emoji: "🧴", color: "#74C0FC" },
+    { id: "limpeza", name: "Limpeza", emoji: "🧹", color: "#A9E34B" },
+    { id: "farmacia", name: "Farmácia", emoji: "💊", color: "#FF8CC8" },
+    { id: "roupas", name: "Roupas", emoji: "👗", color: "#B197FC" },
+    { id: "escolar", name: "Material Escolar", emoji: "✏️", color: "#FFD43B" },
+    { id: "mercearia", name: "Mercearia", emoji: "🥫", color: "#FFA94D" },
+    { id: "bebidas", name: "Bebidas", emoji: "🥤", color: "#63E6BE" },
+    { id: "outros", name: "Outros", emoji: "📦", color: "#CED4DA" },
+  ];
+
+  const STOCK_LEVELS = [
+    { value: "out", label: "Sem estoque", color: "#FF6B6B", icon: "✗" },
+    { value: "low", label: "Estoque baixo", color: "#FFD43B", icon: "!" },
+    { value: "ok", label: "OK", color: "#51CF66", icon: "✓" },
+    { value: "full", label: "Cheio", color: "#339AF0", icon: "★" },
+  ];
+
+  let items = {};
+  let currentView = 'lista';
+  let activeCategory = null;
+  let activeFilter = 'all';
+  let searchTerm = '';
+  let editId = null;
+  let selectedCat = 'especificos';
+  let selectedStock = 'out';
+
+  // Expose globals
+  window.setView = (v) => {
+    currentView = v;
+    activeCategory = null;
+    document.querySelectorAll('.nav-btn').forEach((b, i) => {
+      b.classList.toggle('active', ['lista','estoque','categorias'][i] === v);
+    });
+    render();
+  };
+  window.openAdd = () => {
+    editId = null;
+    selectedCat = activeCategory || 'especificos';
+    selectedStock = 'out';
+    document.getElementById('modal-title').textContent = 'Novo item';
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-qty').value = 1;
+    document.getElementById('f-unit').value = 'un';
+    document.getElementById('f-notes').value = '';
+    document.getElementById('f-urgent').checked = false;
+    document.getElementById('save-btn-label') && (document.querySelector('.save-btn').textContent = '✅ Adicionar à lista');
+    renderCatPicker();
+    renderStockPicker();
+    document.getElementById('overlay').style.display = 'flex';
+    setTimeout(() => document.getElementById('f-name').focus(), 100);
+  };
+  window.openEdit = (id) => {
+    const item = items[id];
+    if (!item) return;
+    editId = id;
+    selectedCat = item.category;
+    selectedStock = item.stock || 'out';
+    document.getElementById('modal-title').textContent = 'Editar item';
+    document.getElementById('f-name').value = item.name;
+    document.getElementById('f-qty').value = item.quantity || 1;
+    document.getElementById('f-unit').value = item.unit || 'un';
+    document.getElementById('f-notes').value = item.notes || '';
+    document.getElementById('f-urgent').checked = item.urgent || false;
+    document.querySelector('.save-btn').textContent = '💾 Salvar alterações';
+    renderCatPicker();
+    renderStockPicker();
+    document.getElementById('overlay').style.display = 'flex';
+  };
+  window.closeForm = () => { document.getElementById('overlay').style.display = 'none'; };
+  window.closeModal = (e) => { if (e.target === document.getElementById('overlay')) closeForm(); };
+
+  window.saveForm = async () => {
+    const name = document.getElementById('f-name').value.trim();
+    if (!name) { showToast('Digite o nome do item!'); return; }
+    setSyncing(true);
+    const data = {
+      name,
+      category: selectedCat,
+      quantity: Number(document.getElementById('f-qty').value) || 1,
+      unit: document.getElementById('f-unit').value,
+      stock: selectedStock,
+      notes: document.getElementById('f-notes').value.trim(),
+      urgent: document.getElementById('f-urgent').checked,
+      done: editId ? (items[editId].done || false) : false,
+      updatedAt: Date.now(),
+    };
+    if (editId) {
+      await update(ref(db, 'items/' + editId), data);
+      showToast('Item atualizado!');
+    } else {
+      data.createdAt = Date.now();
+      await push(itemsRef, data);
+      showToast('Item adicionado! ✅');
+    }
+    setSyncing(false);
+    closeForm();
+  };
+
+  window.toggleDone = async (id) => {
+    const item = items[id];
+    setSyncing(true);
+    await update(ref(db, 'items/' + id), { done: !item.done, updatedAt: Date.now() });
+    setSyncing(false);
+  };
+
+  window.deleteItem = async (id) => {
+    setSyncing(true);
+    await remove(ref(db, 'items/' + id));
+    setSyncing(false);
+    showToast('Item removido');
+  };
+
+  window.cycleStock = async (id) => {
+    const levels = ['out','low','ok','full'];
+    const item = items[id];
+    const idx = levels.indexOf(item.stock || 'out');
+    const next = levels[(idx + 1) % levels.length];
+    setSyncing(true);
+    await update(ref(db, 'items/' + id), { stock: next, updatedAt: Date.now() });
+    setSyncing(false);
+  };
+
+  window.clearDone = async () => {
+    setSyncing(true);
+    const promises = Object.entries(items)
+      .filter(([, v]) => v.done)
+      .map(([k]) => remove(ref(db, 'items/' + k)));
+    await Promise.all(promises);
+    setSyncing(false);
+    showToast('Feitos removidos!');
+  };
+
+  window.setFilter = (f) => { activeFilter = f; render(); };
+  window.setSearch = (v) => { searchTerm = v; render(); };
+  window.setActiveCategory = (c) => { activeCategory = c; currentView = 'lista'; render(); };
+  window.selectCat = (id) => { selectedCat = id; renderCatPicker(); };
+  window.selectStock = (v) => { selectedStock = v; renderStockPicker(); };
+
+  function setSyncing(v) {
+    const b = document.getElementById('sync-badge');
+    if (!b) return;
+    if (v) { b.className = 'badge syncing'; b.textContent = '⟳ Salvando'; }
+    else { b.className = 'badge online'; b.textContent = '● Online'; }
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  function renderCatPicker() {
+    const el = document.getElementById('cat-picker');
+    el.innerHTML = CATEGORIES.map(c => `
+      <button class="cat-pick-btn ${selectedCat === c.id ? 'selected' : ''}"
+        style="${selectedCat === c.id ? `background:${c.color}33;border-color:${c.color}` : ''}"
+        onclick="selectCat('${c.id}')">${c.emoji} ${c.name}</button>
+    `).join('');
+  }
+
+  function renderStockPicker() {
+    const el = document.getElementById('stock-picker');
+    el.innerHTML = STOCK_LEVELS.map(s => `
+      <button class="stock-btn"
+        style="border-color:${s.color};${selectedStock === s.value ? `background:${s.color};color:#fff` : ''}"
+        onclick="selectStock('${s.value}')">${s.icon} ${s.label}</button>
+    `).join('');
+  }
+
+  function getFiltered() {
+    return Object.entries(items).map(([id, v]) => ({ id, ...v })).filter(item => {
+      const matchCat = !activeCategory || item.category === activeCategory;
+      const matchSearch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchFilter = activeFilter === 'all' || (activeFilter === 'done' ? item.done : !item.done);
+      return matchCat && matchSearch && matchFilter;
+    });
+  }
+
+  function render() {
+    const allItems = Object.entries(items).map(([id, v]) => ({ id, ...v }));
+    const pending = allItems.filter(i => !i.done).length;
+    const urgent = allItems.filter(i => i.urgent && !i.done).length;
+    const done = allItems.filter(i => i.done).length;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-urgent').textContent = urgent;
+    document.getElementById('stat-done').textContent = done;
+    document.getElementById('sync-footer').textContent = `Última sync: ${new Date().toLocaleTimeString('pt-BR')}`;
+
+    const main = document.getElementById('main-content');
+
+    if (currentView === 'lista') renderLista(main, allItems);
+    else if (currentView === 'estoque') renderEstoque(main, allItems);
+    else renderCategorias(main, allItems);
+  }
+
+  function renderLista(main, allItems) {
+    const filtered = getFiltered();
+    const done = allItems.filter(i => i.done).length;
+    let html = `
+      <div class="tool-row">
+        <input class="search-input" placeholder="🔍 Buscar item..." value="${searchTerm}" oninput="setSearch(this.value)" />
+        <div class="filter-row">
+          <button class="filter-btn ${activeFilter==='all'?'active':''}" onclick="setFilter('all')">Todos</button>
+          <button class="filter-btn ${activeFilter==='pending'?'active':''}" onclick="setFilter('pending')">Pendentes</button>
+          <button class="filter-btn ${activeFilter==='done'?'active':''}" onclick="setFilter('done')">Feitos</button>
+          ${done > 0 ? `<button class="clear-btn" onclick="clearDone()">🗑 Limpar feitos</button>` : ''}
+        </div>
+      </div>
+      ${activeCategory ? `<button class="back-btn" onclick="setActiveCategory(null)">← Todas as categorias</button>` : ''}
+    `;
+
+    if (filtered.length === 0) {
+      html += `<div class="empty"><div class="empty-icon">🛒</div><p class="empty-text">Nenhum item aqui!</p><p class="empty-hint">Toque no + para adicionar</p></div>`;
+    } else {
+      CATEGORIES.forEach(cat => {
+        const catItems = filtered.filter(i => i.category === cat.id);
+        if (!catItems.length) return;
+        const remaining = catItems.filter(i => !i.done).length;
+        html += `<div class="cat-section">
+          <div class="cat-header">
+            <span class="cat-dot" style="background:${cat.color}"></span>
+            <span class="cat-name-label">${cat.emoji} ${cat.name}</span>
+            <span class="cat-count">${remaining} restantes</span>
+          </div>
+          ${catItems.map(item => itemCardHTML(item, cat)).join('')}
+        </div>`;
+      });
+    }
+    main.innerHTML = html;
+  }
+
+  function renderEstoque(main, allItems) {
+    let html = `<p class="section-hint">Toque no estoque para alternar o nível</p>`;
+    STOCK_LEVELS.forEach(lvl => {
+      const lvlItems = allItems.filter(i => (i.stock || 'out') === lvl.value);
+      if (!lvlItems.length) return;
+      html += `<div class="cat-section">
+        <div class="cat-header">
+          <span class="cat-dot" style="background:${lvl.color}"></span>
+          <span class="cat-name-label">${lvl.icon} ${lvl.label}</span>
+          <span class="cat-count">${lvlItems.length} itens</span>
+        </div>
+        ${lvlItems.map(item => {
+          const cat = CATEGORIES.find(c => c.id === item.category) || CATEGORIES[0];
+          return itemCardHTML(item, cat);
+        }).join('')}
+      </div>`;
+    });
+    if (allItems.length === 0) html += `<div class="empty"><div class="empty-icon">📦</div><p class="empty-text">Nenhum item cadastrado</p><p class="empty-hint">Adicione itens na aba Lista</p></div>`;
+    main.innerHTML = html;
+  }
+
+  function renderCategorias(main, allItems) {
+    let html = `<div class="cat-grid">`;
+    CATEGORIES.forEach(cat => {
+      const catItems = allItems.filter(i => i.category === cat.id);
+      const pending = catItems.filter(i => !i.done).length;
+      html += `<button class="cat-card" style="border-color:${cat.color}44" onclick="setActiveCategory('${cat.id}')">
+        <span class="cat-card-emoji">${cat.emoji}</span>
+        <span class="cat-card-name">${cat.name}</span>
+        ${pending > 0 ? `<span class="cat-card-badge" style="background:${cat.color}">${pending}</span>` : ''}
+      </button>`;
+    });
+    html += `</div>`;
+    main.innerHTML = html;
+  }
+
+  function itemCardHTML(item, cat) {
+    const stock = STOCK_LEVELS.find(s => s.value === (item.stock || 'out'));
+    return `<div class="card ${item.done ? 'done' : ''}" style="border-left-color:${item.urgent && !item.done ? '#FF6B6B' : cat.color}">
+      <button class="check-circle ${item.done ? 'checked' : ''}" onclick="toggleDone('${item.id}')">${item.done ? '✓' : ''}</button>
+      <div class="card-body" onclick="openEdit('${item.id}')">
+        <div class="card-top">
+          <span class="card-name ${item.done ? 'done-text' : ''}">${item.urgent && !item.done ? '🚨 ' : ''}${item.name}</span>
+          <span class="card-qty">${item.quantity || 1} ${item.unit || 'un'}</span>
+        </div>
+        ${item.notes ? `<p class="card-notes">${item.notes}</p>` : ''}
+        <div class="card-meta">
+          <span class="card-cat-label">${cat.emoji} ${cat.name}</span>
+          <button class="stock-tag" style="color:${stock.color};border-color:${stock.color}44;background:${stock.color}18"
+            onclick="event.stopPropagation();cycleStock('${item.id}')">${stock.icon} ${stock.label}</button>
+        </div>
+      </div>
+      <button class="delete-btn" onclick="deleteItem('${item.id}')">✕</button>
+    </div>`;
+  }
+
+  // Firebase listener — tempo real!
+  onValue(itemsRef, (snapshot) => {
+    items = snapshot.val() || {};
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    render();
+  });
+</script>
+</body>
+</html>
