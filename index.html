@@ -148,6 +148,28 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-text { color: #888; font-size: 14px; }
 
+
+    /* CATEGORY MANAGER */
+    .manage-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+    .manage-title { font-size:16px; font-weight:800; color:#fff; }
+    .add-cat-btn { padding:8px 14px; background:#51CF6622; border:1px solid #51CF6644; border-radius:20px; color:#51CF66; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+    .cat-manage-list { display:flex; flex-direction:column; gap:10px; }
+    .cat-manage-card { display:flex; align-items:center; background:#161B22; border-radius:14px; padding:14px 12px; gap:12px; border-left:4px solid #333; }
+    .cat-manage-emoji { font-size:26px; flex-shrink:0; cursor:pointer; }
+    .cat-manage-info { flex:1; min-width:0; }
+    .cat-manage-name { font-size:15px; font-weight:700; color:#E8E8E8; }
+    .cat-manage-stats { font-size:11px; color:#555; margin-top:3px; }
+    .cat-edit-btn { padding:6px 10px; background:#1E2330; border:1px solid #2A3040; border-radius:10px; color:#888; font-size:12px; cursor:pointer; font-family:inherit; flex-shrink:0; }
+    .cat-delete-btn { padding:6px 8px; background:transparent; border:none; color:#333; font-size:14px; cursor:pointer; font-family:inherit; flex-shrink:0; }
+    .cat-delete-btn:hover { color:#FF6B6B; }
+    .emoji-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin:8px 0; max-height:200px; overflow-y:auto; }
+    .emoji-opt { font-size:22px; padding:6px; text-align:center; cursor:pointer; border-radius:8px; border:2px solid transparent; }
+    .emoji-opt.sel { border-color:#51CF66; background:#51CF6622; }
+    .color-grid { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
+    .color-opt { width:32px; height:32px; border-radius:50%; cursor:pointer; border:3px solid transparent; }
+    .color-opt.sel { border-color:#fff; }
+    .default-tag { font-size:10px; color:#555; background:#1E2330; padding:2px 6px; border-radius:6px; margin-left:4px; }
+
     /* TOAST */
     .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1E2330; border: 1px solid #2A3040; color: #E8E8E8; padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 700; z-index: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
@@ -242,7 +264,7 @@
     <nav>
       <button class="nav-btn active" onclick="setView('lista')">🛒 Lista</button>
       <button class="nav-btn" onclick="setView('estoque')">📦 Estoque</button>
-      <button class="nav-btn" onclick="setView('categorias')">🗂 Categorias</button>
+      <button class="nav-btn" onclick="setView('categorias')">⚙️ Gerenciar</button>
     </nav>
   </header>
 
@@ -284,19 +306,21 @@
   const db = getDatabase(app);
   const stockRef = ref(db, 'stock');
   const listRef = ref(db, 'lista');
+  const catsRef = ref(db, 'categories');
 
-  const CATEGORIES = [
-    { id: "especificos", name: "Específicos", emoji: "🛒", color: "#FF6B6B" },
-    { id: "hortifruti",  name: "Hortifruti e Frios", emoji: "🥦", color: "#51CF66" },
-    { id: "higiene",     name: "Higiene Pessoal", emoji: "🧴", color: "#74C0FC" },
-    { id: "limpeza",     name: "Limpeza", emoji: "🧹", color: "#A9E34B" },
-    { id: "farmacia",    name: "Farmácia", emoji: "💊", color: "#FF8CC8" },
-    { id: "roupas",      name: "Roupas", emoji: "👕", color: "#B197FC" },
-    { id: "escolar",     name: "Material Escolar", emoji: "✏️", color: "#FFD43B" },
-    { id: "mercearia",   name: "Mercearia", emoji: "🥫", color: "#FFA94D" },
-    { id: "bebidas",     name: "Bebidas", emoji: "🥤", color: "#63E6BE" },
-    { id: "outros",      name: "Outros", emoji: "📦", color: "#CED4DA" },
+  const DEFAULT_CATEGORIES = [
+    { id: "especificos", name: "Específicos", emoji: "🛒", color: "#FF6B6B", isDefault: true },
+    { id: "hortifruti",  name: "Hortifruti e Frios", emoji: "🥦", color: "#51CF66", isDefault: true },
+    { id: "higiene",     name: "Higiene Pessoal", emoji: "🧴", color: "#74C0FC", isDefault: true },
+    { id: "limpeza",     name: "Limpeza", emoji: "🧹", color: "#A9E34B", isDefault: true },
+    { id: "farmacia",    name: "Farmácia", emoji: "💊", color: "#FF8CC8", isDefault: true },
+    { id: "roupas",      name: "Roupas", emoji: "👕", color: "#B197FC", isDefault: true },
+    { id: "escolar",     name: "Material Escolar", emoji: "✏️", color: "#FFD43B", isDefault: true },
+    { id: "mercearia",   name: "Mercearia", emoji: "🥫", color: "#FFA94D", isDefault: true },
+    { id: "bebidas",     name: "Bebidas", emoji: "🥤", color: "#63E6BE", isDefault: true },
+    { id: "outros",      name: "Outros", emoji: "📦", color: "#CED4DA", isDefault: true },
   ];
+  let CATEGORIES = [...DEFAULT_CATEGORIES]; // will be overwritten by Firebase
 
   const LEVELS = [
     { value: "full", label: "Cheio",  color: "#339AF0", icon: "🔵" },
@@ -315,6 +339,9 @@
   let editMode = null; // 'stock' or 'list'
   let formCat = 'especificos';
   let formLevel = 'ok';
+  let formEmoji = '🛒';
+  let formColor = '#FF6B6B';
+  let editCatId = null;
 
   // ── GLOBALS ──────────────────────────────────────────────
   window.setView = (v) => {
@@ -552,6 +579,81 @@
 
   function getCat(id) { return CATEGORIES.find(c => c.id === id) || CATEGORIES[0]; }
   function getLevel(v) { return LEVELS.find(l => l.value === v) || LEVELS[1]; }
+
+
+  // ── CATEGORY ACTIONS ──────────────────────────────────────
+  const EMOJI_OPTIONS = ['🛒','📦','🥦','🧴','🧹','💊','👕','✏️','🥫','🥤','🍖','🧀','🍞','🥛','🧃','🥚','🧁','🍎','🥕','🌿','🐟','🥩','🍝','🫙','🧂','🫒','🛁','🪥','🧻','🪴','💡','🔧','🪣','🧽','🖊️','📚','📎','🎒','👗','👟','👜','💍','🎮','🎵','🏋️','🐾','🌺','🎁','🏠','🚗','💻','📱','🎨','⚽','🏊','🧘','🌙','☀️','❄️','🔑','💰'];
+  const COLOR_OPTIONS = ['#FF6B6B','#FF8CC8','#FFD43B','#FFA94D','#51CF66','#A9E34B','#63E6BE','#74C0FC','#339AF0','#B197FC','#E599F7','#CED4DA','#F06595','#FF6348','#1DD1A1','#54A0FF'];
+
+  window.openCatForm = (id) => {
+    editCatId = id;
+    const cat = id ? CATEGORIES.find(c => c.id === id) : null;
+    formEmoji = cat ? cat.emoji : '📦';
+    formColor = cat ? cat.color : '#74C0FC';
+    document.getElementById('modal-title').textContent = id ? 'Editar categoria' : 'Nova categoria';
+    document.getElementById('form-body').innerHTML = `
+      <label class="form-label">Nome da categoria *</label>
+      <input class="form-input" id="f-catname" placeholder="Ex: Bebidas, Padaria..." value="${cat ? cat.name : ''}" />
+      <label class="form-label">Emoji</label>
+      <div class="emoji-grid" id="emoji-grid"></div>
+      <label class="form-label">Cor</label>
+      <div class="color-grid" id="color-grid"></div>
+      ${cat && cat.isDefault ? '<p style="font-size:12px;color:#555;margin-top:8px">⚠️ Esta é uma categoria padrão — você pode editar nome e emoji, mas ela não pode ser excluída.</p>' : ''}
+      <button class="save-btn" onclick="saveCatForm()">${id ? '💾 Salvar categoria' : '✅ Criar categoria'}</button>
+    `;
+    renderEmojiGrid(); renderColorGrid();
+    document.getElementById('overlay').style.display = 'flex';
+    setTimeout(() => document.getElementById('f-catname').focus(), 100);
+  };
+
+  window.selectEmoji = (e) => { formEmoji = e; renderEmojiGrid(); };
+  window.selectColor = (c) => { formColor = c; renderColorGrid(); };
+
+  function renderEmojiGrid() {
+    const el = document.getElementById('emoji-grid');
+    if (!el) return;
+    el.innerHTML = EMOJI_OPTIONS.map(e => `
+      <div class="emoji-opt ${formEmoji===e?'sel':''}" onclick="selectEmoji('${e}')">${e}</div>
+    `).join('');
+  }
+  function renderColorGrid() {
+    const el = document.getElementById('color-grid');
+    if (!el) return;
+    el.innerHTML = COLOR_OPTIONS.map(c => `
+      <div class="color-opt ${formColor===c?'sel':''}" style="background:${c}" onclick="selectColor('${c}')"></div>
+    `).join('');
+  }
+
+  window.saveCatForm = async () => {
+    const name = document.getElementById('f-catname').value.trim();
+    if (!name) { showToast('Digite o nome da categoria!'); return; }
+    setSyncing(true);
+    if (editCatId) {
+      const cat = CATEGORIES.find(c => c.id === editCatId);
+      if (cat && cat.isDefault) {
+        // Update default cat in Firebase (override)
+        await update(ref(db, 'categories/' + editCatId), { name, emoji: formEmoji, color: formColor });
+      } else {
+        await update(ref(db, 'categories/' + editCatId), { name, emoji: formEmoji, color: formColor });
+      }
+      showToast('Categoria atualizada!');
+    } else {
+      const newId = 'cat_' + Date.now();
+      await update(ref(db, 'categories/' + newId), { id: newId, name, emoji: formEmoji, color: formColor, isDefault: false, createdAt: Date.now() });
+      showToast('Categoria criada! 🎉');
+    }
+    setSyncing(false); closeForm();
+  };
+
+  window.deleteCat = async (id) => {
+    const cat = CATEGORIES.find(c => c.id === id);
+    if (cat && cat.isDefault) { showToast('Categorias padrão não podem ser excluídas'); return; }
+    const inUse = Object.values(stockItems).some(i => i.category === id) || Object.values(listItems).some(i => i.category === id);
+    if (inUse) { showToast('Mova os itens desta categoria antes de excluir'); return; }
+    setSyncing(true);
+    await remove(ref(db, 'categories/' + id));
+    setSyncing(false); showToast('Categoria removida');
+  };
 
   // ── RENDER ────────────────────────────────────────────────
   function render() {
